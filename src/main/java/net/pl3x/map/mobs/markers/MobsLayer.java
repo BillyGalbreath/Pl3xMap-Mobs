@@ -23,13 +23,16 @@
  */
 package net.pl3x.map.mobs.markers;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import net.pl3x.map.core.markers.Point;
 import net.pl3x.map.core.markers.layer.WorldLayer;
 import net.pl3x.map.core.markers.marker.Marker;
 import net.pl3x.map.core.markers.option.Options;
 import net.pl3x.map.core.markers.option.Tooltip;
+import net.pl3x.map.mobs.Pl3xMapMobs;
 import net.pl3x.map.mobs.configuration.WorldConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -40,10 +43,17 @@ import org.jetbrains.annotations.NotNull;
 public class MobsLayer extends WorldLayer {
     public static final String KEY = "pl3xmap_mobs";
 
+    private final Pl3xMapMobs plugin;
     private final WorldConfig config;
+    private final List<Marker<?>> markers = new ArrayList<>();
 
-    public MobsLayer(@NotNull WorldConfig config) {
+    private final Object syncLock = new Object();
+
+    private boolean running;
+
+    public MobsLayer(@NotNull Pl3xMapMobs plugin, @NotNull WorldConfig config) {
         super(KEY, config.getWorld(), () -> config.LAYER_LABEL);
+        this.plugin = plugin;
         this.config = config;
 
         setShowControls(config.LAYER_SHOW_CONTROLS);
@@ -51,6 +61,42 @@ public class MobsLayer extends WorldLayer {
         setUpdateInterval(config.LAYER_UPDATE_INTERVAL);
         setPriority(config.LAYER_PRIORITY);
         setZIndex(config.LAYER_ZINDEX);
+    }
+
+    @Override
+    public @NotNull Collection<Marker<?>> getMarkers() {
+        synchronized (this.syncLock) {
+            if (!this.running) {
+                this.running = true;
+                Bukkit.getScheduler().runTask(this.plugin, this::syncUpdate);
+            }
+            return this.markers;
+        }
+    }
+
+    public void syncUpdate() {
+        synchronized (this.syncLock) {
+            Collection<Marker<?>> markers = new HashSet<>();
+            World bukkitWorld = Bukkit.getWorld(this.config.getWorld().getName());
+            if (bukkitWorld == null) {
+                return;
+            }
+            bukkitWorld.getEntitiesByClass(Mob.class).forEach(mob -> {
+                if (config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
+                    return;
+                }
+                String key = String.format("%s_%s_%s", KEY, getWorld().getName(), mob.getUniqueId());
+                markers.add(Marker.icon(key, point(mob.getLocation()), Icon.get(mob).getKey(), this.config.ICON_SIZE)
+                        .setOptions(Options.builder()
+                                .tooltipDirection(Tooltip.Direction.TOP)
+                                .tooltipContent(config.ICON_TOOLTIP_CONTENT
+                                        .replace("<mob-id>", mob(mob))
+                                ).build()));
+            });
+            this.markers.clear();
+            this.markers.addAll(markers);
+            this.running = false;
+        }
     }
 
     private @NotNull String mob(@NotNull Mob mob) {
@@ -61,27 +107,5 @@ public class MobsLayer extends WorldLayer {
 
     private @NotNull Point point(@NotNull Location loc) {
         return Point.of(loc.getBlockX(), loc.getBlockZ());
-    }
-
-    @Override
-    public @NotNull Collection<Marker<?>> getMarkers() {
-        Collection<Marker<?>> markers = new HashSet<>();
-        World bukkitWorld = Bukkit.getWorld(this.config.getWorld().getName());
-        if (bukkitWorld == null) {
-            return markers;
-        }
-        bukkitWorld.getEntitiesByClass(Mob.class).forEach(mob -> {
-            if (config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
-                return;
-            }
-            String key = String.format("%s_%s_%s", KEY, getWorld().getName(), mob.getUniqueId());
-            markers.add(Marker.icon(key, point(mob.getLocation()), Icon.get(mob).getKey(), this.config.ICON_SIZE)
-                    .setOptions(Options.builder()
-                            .tooltipDirection(Tooltip.Direction.TOP)
-                            .tooltipContent(config.ICON_TOOLTIP_CONTENT
-                                    .replace("<mob-id>", mob(mob))
-                            ).build()));
-        });
-        return markers;
     }
 }

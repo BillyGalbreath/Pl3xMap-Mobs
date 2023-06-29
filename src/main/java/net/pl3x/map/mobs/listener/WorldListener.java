@@ -31,6 +31,7 @@ import net.pl3x.map.core.event.server.ServerLoadedEvent;
 import net.pl3x.map.core.event.world.WorldLoadedEvent;
 import net.pl3x.map.core.event.world.WorldUnloadedEvent;
 import net.pl3x.map.core.world.World;
+import net.pl3x.map.mobs.Pl3xMapMobs;
 import net.pl3x.map.mobs.configuration.WorldConfig;
 import net.pl3x.map.mobs.markers.Icon;
 import net.pl3x.map.mobs.markers.MobsLayer;
@@ -38,7 +39,10 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 public class WorldListener implements EventListener, Listener {
-    public WorldListener() {
+    private final Pl3xMapMobs plugin;
+
+    public WorldListener(Pl3xMapMobs plugin) {
+        this.plugin = plugin;
         Pl3xMap.api().getEventRegistry().register(this);
     }
 
@@ -67,6 +71,6 @@ public class WorldListener implements EventListener, Listener {
     }
 
     private void registerWorld(@NotNull World world) {
-        world.getLayerRegistry().register(new MobsLayer(new WorldConfig(world)));
+        world.getLayerRegistry().register(new MobsLayer(this.plugin, new WorldConfig(world)));
     }
 }

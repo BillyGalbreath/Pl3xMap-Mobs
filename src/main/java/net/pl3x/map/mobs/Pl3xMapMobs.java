@@ -37,7 +37,7 @@ public final class Pl3xMapMobs extends JavaPlugin {
             return;
         }
 
-        getServer().getPluginManager().registerEvents(new WorldListener(), this);
+        getServer().getPluginManager().registerEvents(new WorldListener(this), this);
     }
 
     @Override
