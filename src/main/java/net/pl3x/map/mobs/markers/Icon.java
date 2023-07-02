@@ -65,7 +65,6 @@ public enum Icon {
     BEE(EntityType.BEE, Icon.<Bee>predicate(mob -> mob.getAnger() <= 0)),
     BEE_ANGRY(EntityType.BEE, Icon.<Bee>predicate(mob -> mob.getAnger() > 0)),
     BLAZE(EntityType.BLAZE),
-    @SuppressWarnings("UnstableApiUsage")
     CAMEL(EntityType.CAMEL),
     CAT_BLACK(EntityType.CAT, Icon.<Cat>predicate(mob -> mob.getCatType() == Cat.Type.BLACK)),
     CAT_BRITISH_SHORTHAIR(EntityType.CAT, Icon.<Cat>predicate(mob -> mob.getCatType() == Cat.Type.BRITISH_SHORTHAIR)),
@@ -183,7 +182,6 @@ public enum Icon {
     SKELETON(EntityType.SKELETON),
     SKELETON_HORSE(EntityType.SKELETON_HORSE),
     SLIME(EntityType.SLIME),
-    @SuppressWarnings("UnstableApiUsage")
     SNIFFER(EntityType.SNIFFER),
     SNOW_GOLEM(EntityType.SNOWMAN, Icon.<Snowman>predicate(mob -> !mob.isDerp())),
     SNOW_GOLEM_SHEARED(EntityType.SNOWMAN, Icon.predicate(Snowman::isDerp)),

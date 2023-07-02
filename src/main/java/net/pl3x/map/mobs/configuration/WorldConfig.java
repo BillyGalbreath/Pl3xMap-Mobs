@@ -57,7 +57,21 @@ public class WorldConfig extends AbstractConfig {
     @Key("layer.z-index")
     @Comment("""
             zIndex for map layer""")
-    public int LAYER_ZINDEX = 1;
+    public int LAYER_ZINDEX = 600;
+    @Key("layer.pane")
+    @Comment("""
+            Name of the pane for the mob's layer.
+            (Used for custom CSS attributes)""")
+    public String LAYER_PANE = "pl3xmap_mobs";
+    @Key("layer.css")
+    @Comment("""
+            Custom CSS for the mob's layer.""")
+    public String LAYER_CSS = """
+            div.leaflet-pl3xmap_mobs-pane img {
+              border: 1px solid #000000C0;
+              border-radius: 5px;
+              box-shadow: 1px 2px 5px #00000080
+            }""";
 
     @Key("marker.icon.size")
     @Comment("""

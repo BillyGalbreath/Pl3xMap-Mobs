@@ -61,6 +61,8 @@ public class MobsLayer extends WorldLayer {
         setUpdateInterval(config.LAYER_UPDATE_INTERVAL);
         setPriority(config.LAYER_PRIORITY);
         setZIndex(config.LAYER_ZINDEX);
+        setPane(config.LAYER_PANE);
+        setCss(config.LAYER_CSS);
     }
 
     @Override
@@ -82,14 +84,16 @@ public class MobsLayer extends WorldLayer {
                 return;
             }
             bukkitWorld.getEntitiesByClass(Mob.class).forEach(mob -> {
-                if (config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
+                if (this.config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
                     return;
                 }
                 String key = String.format("%s_%s_%s", KEY, getWorld().getName(), mob.getUniqueId());
                 markers.add(Marker.icon(key, point(mob.getLocation()), Icon.get(mob).getKey(), this.config.ICON_SIZE)
+                        .setPane(this.config.LAYER_PANE)
                         .setOptions(Options.builder()
+                                .tooltipOffset(Point.of(0, -Math.round(this.config.ICON_SIZE.z() / 4F)))
                                 .tooltipDirection(Tooltip.Direction.TOP)
-                                .tooltipContent(config.ICON_TOOLTIP_CONTENT
+                                .tooltipContent(this.config.ICON_TOOLTIP_CONTENT
                                         .replace("<mob-id>", mob(mob))
                                 ).build()));
             });
