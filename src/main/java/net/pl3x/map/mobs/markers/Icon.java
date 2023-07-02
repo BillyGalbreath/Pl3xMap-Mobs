@@ -25,7 +25,11 @@ package net.pl3x.map.mobs.markers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import javax.imageio.ImageIO;
 import net.pl3x.map.core.Pl3xMap;
@@ -239,8 +243,16 @@ public enum Icon {
         return this.type;
     }
 
-    public static @NotNull Icon get(@NotNull Mob mob) {
+    private static final Map<EntityType, Set<Icon>> BY_TYPE = new HashMap<>();
+
+    static {
         for (Icon icon : values()) {
+            BY_TYPE.computeIfAbsent(icon.getType(), k -> new HashSet<>()).add(icon);
+        }
+    }
+
+    public static @NotNull Icon get(@NotNull Mob mob) {
+        for (Icon icon : BY_TYPE.get(mob.getType())) {
             if (icon.getType() == mob.getType()) {
                 if (icon.predicate == null || icon.predicate.apply(mob)) {
                     return icon;
