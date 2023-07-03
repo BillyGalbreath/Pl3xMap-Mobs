@@ -67,36 +67,36 @@ public class MobsLayer extends WorldLayer {
 
     @Override
     public @NotNull Collection<Marker<?>> getMarkers() {
+        if (!this.running) {
+            this.running = true;
+            Bukkit.getScheduler().runTask(this.plugin, this::syncUpdate);
+        }
         synchronized (this.syncLock) {
-            if (!this.running) {
-                this.running = true;
-                Bukkit.getScheduler().runTask(this.plugin, this::syncUpdate);
-            }
             return this.markers;
         }
     }
 
     public void syncUpdate() {
-        synchronized (this.syncLock) {
-            Collection<Marker<?>> markers = new HashSet<>();
-            World bukkitWorld = Bukkit.getWorld(this.config.getWorld().getName());
-            if (bukkitWorld == null) {
+        Collection<Marker<?>> markers = new HashSet<>();
+        World bukkitWorld = Bukkit.getWorld(this.config.getWorld().getName());
+        if (bukkitWorld == null) {
+            return;
+        }
+        bukkitWorld.getEntitiesByClass(Mob.class).forEach(mob -> {
+            if (this.config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
                 return;
             }
-            bukkitWorld.getEntitiesByClass(Mob.class).forEach(mob -> {
-                if (this.config.ONLY_SHOW_MOBS_EXPOSED_TO_SKY && bukkitWorld.getHighestBlockYAt(mob.getLocation()) > mob.getLocation().getY()) {
-                    return;
-                }
-                String key = String.format("%s_%s_%s", KEY, getWorld().getName(), mob.getUniqueId());
-                markers.add(Marker.icon(key, point(mob.getLocation()), Icon.get(mob).getKey(), this.config.ICON_SIZE)
-                        .setPane(this.config.LAYER_PANE)
-                        .setOptions(Options.builder()
-                                .tooltipOffset(Point.of(0, -Math.round(this.config.ICON_SIZE.z() / 4F)))
-                                .tooltipDirection(Tooltip.Direction.TOP)
-                                .tooltipContent(this.config.ICON_TOOLTIP_CONTENT
-                                        .replace("<mob-id>", mob(mob))
-                                ).build()));
-            });
+            String key = String.format("%s_%s_%s", KEY, getWorld().getName(), mob.getUniqueId());
+            markers.add(Marker.icon(key, point(mob.getLocation()), Icon.get(mob).getKey(), this.config.ICON_SIZE)
+                    .setPane(this.config.LAYER_PANE)
+                    .setOptions(Options.builder()
+                            .tooltipOffset(Point.of(0, -Math.round(this.config.ICON_SIZE.z() / 4F)))
+                            .tooltipDirection(Tooltip.Direction.TOP)
+                            .tooltipContent(this.config.ICON_TOOLTIP_CONTENT
+                                    .replace("<mob-id>", mob(mob))
+                            ).build()));
+        });
+        synchronized (this.syncLock) {
             this.markers.clear();
             this.markers.addAll(markers);
             this.running = false;
